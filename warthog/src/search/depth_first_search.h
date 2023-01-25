@@ -84,7 +84,7 @@ class depth_first_search : public warthog::search
                 sol.sum_of_edge_costs_ = target->get_g();
 
 				// follow backpointers to extract the path
-				assert(expander_->is_target(target, pi));
+				assert(expander_->is_target(target, &pi));
                 warthog::search_node* current = target;
 				while(true)
                 {

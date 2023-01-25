@@ -81,7 +81,7 @@ class greedy_depth_first_search : public warthog::search
                 sol.sum_of_edge_costs_ = target->get_g();
 
 				// follow backpointers to extract the path
-				assert(expander_->is_target(target, &pi_));
+				assert(expander_->is_target(target, &pi));
                 warthog::search_node* current = target;
 				while(true)
                 {
@@ -92,7 +92,7 @@ class greedy_depth_first_search : public warthog::search
                 std::reverse(sol.path_.begin(), sol.path_.end());
 
                 #ifndef NDEBUG
-                if(pi_.verbose_)
+                if(pi.verbose_)
                 {
                     for(auto& state : sol.path_)
                     {
@@ -101,7 +101,7 @@ class greedy_depth_first_search : public warthog::search
                         std::cerr 
                             << "final path: (" << x << ", " << y << ")...";
                         warthog::search_node* n = expander_->generate(state);
-                        assert(n->get_search_number() == pi_.instance_id_);
+                        assert(n->get_search_number() == pi.instance_id_);
                         n->print(std::cerr);
                         std::cerr << std::endl;
                     }
