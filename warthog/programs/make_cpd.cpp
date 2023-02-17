@@ -38,8 +38,6 @@ range(size_t from, size_t to, size_t node_count)
     std::vector<warthog::sn_id_t> nodes;
     assert(to > 0);
     assert(from < to);
-    assert((unsigned int)from < node_count);
-    assert((unsigned int)to <= node_count);
 
     nodes.resize(to - from);
     std::iota(nodes.begin(), nodes.end(), from);
@@ -210,6 +208,35 @@ make_cpd(warthog::graph::xy_graph &g, warthog::cpd::graph_oracle_base<S> &cpd,
     return EXIT_SUCCESS;
 }
 
+void write_conf(
+  const std::string& conf_file, 
+  const std::string& xyfile,
+  int div, int mod, int num, int from, int to) {
+    std::ofstream ofs(conf_file);
+  /*
+   * Tell the downstream script how we distribute cpd rows, there are 3 options:
+   * 1. (div, num), num < div: 
+   *    - divide nodes to k blocks, nodes with id / div == num are in the same block
+   *    - get row: t % div, i.e., oracle.set_mod(div)
+   * 2. (mod, num), num < mod:
+   *    - divide nodes into k blocks, nodes with id % mod == num are in the same block
+   *    - get row: t / mod, i.e., oracle.set_div(mod)
+   * 3. (from, to)
+   *    - nodes in [from, to) are in the same block
+   *    - get row: t - from, i.e., oracle.set_offset(from)
+   */
+    if (div > 0) {
+      mod = from = to = 0;
+    }
+    else if (mod > 0) {
+      div = from = to = 0;
+    }
+    // else we are using [from, to) or not to distribut at all
+    ofs << "xyfile,mod,div,num,from,to" << std::endl;
+    ofs << xyfile << "," << mod << "," << div << "," << num << ","
+        << from << "," << to << std::endl;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -272,6 +299,7 @@ main(int argc, char *argv[])
 
     std::string xy_filename = cfg.get_param_value("input");
     std::string cpd_filename = cfg.get_param_value("output");
+    std::string conf_filenme;
 
     if (xy_filename == "")
     {
@@ -320,9 +348,9 @@ main(int argc, char *argv[])
         std::cerr << "No --output provided, defaulting to: " << cpd_filename
                   << std::endl;
     }
-
     uint32_t mod = 0;
     uint32_t num = 0;
+    uint32_t div = 0;
     uint32_t from = 0;
     uint32_t to = 0;
     uint32_t node_count = g.get_num_nodes();
@@ -362,7 +390,6 @@ main(int argc, char *argv[])
     {
         std::string s_div = cfg.get_param_value("div");
         std::string s_num = cfg.get_param_value("num");
-        int div = 0;
 
         // TODO this should be a try/catch block
         if (s_div != "") {
@@ -390,7 +417,7 @@ main(int argc, char *argv[])
 
         int range = g.get_num_nodes() / div;
         from = range * num;
-        to = std::max<size_t>(from + range, g.get_num_nodes());
+        to = std::min<size_t>(from + range, g.get_num_nodes());
         node_count = to - from;
     }
     else
@@ -420,6 +447,9 @@ main(int argc, char *argv[])
             to = node_count;
         }
     }
+
+    conf_filenme = cpd_filename + "_conf.csv";
+    write_conf(conf_filenme, xy_filename, div, mod, num, from, to);
 
     std::string s_seed = cfg.get_param_value("seed");
     uint32_t seed;

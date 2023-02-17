@@ -18,13 +18,20 @@ D_LIBS = -L./lib -L/usr/local/lib
 warthog = ./lib/libwarthog.a
 extra = ./lib/libwarthog-extra.a
 
-CFLAGS = -std=c++17 -pedantic -pthread -Wall -Werror -Wno-conversion \
-	-Wno-unused-result -Wno-unused-but-set-variable -fopenmp -fconcepts
+TCH_SRC = $(wildcard tch/*/*.cpp)
+TCH_EXE = $(wildcard tch/experiments/*.cpp)
+D_TCH_INCLUDES = -I../../tch
+TCH_OBJ = $(TCH_SRC:%.cpp/obj/%.o)
+tch = ./lib/libtch.a
+
+CFLAGS = -std=c++17 -pedantic -pthread -Wall -Wno-conversion \
+	-Wno-unused-result -Wno-unused-but-set-variable -fopenmp
 # PROFILE_CFLAGS = $(DEV_CFLAGS) -pg -DNDEBUG
 
 FLAVOURS = fast dev debug
 PROGRAMS = $(WARTHOG_EXE:programs/%.cpp=bin/%)
 PROGRAMS += $(WARTHOG_TEST:.cpp=)
+# PROGRAMS += $(TCH_EXE:tch_programs/%.cpp=tch/%)
 
 ifeq ("$(findstring Darwin, "$(shell uname -s)")", "Darwin")
   CC = g++

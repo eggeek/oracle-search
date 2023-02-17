@@ -14,6 +14,8 @@ convert: bin/dimacs2xy bin/dimacs2metis bin/grid2graph
 
 test: bin/tests test/cpd_search
 
+tch: tch/split_data
+
 $(warthog): $(WARTHOG_OBJ)
 	@echo "###  Archiving object files: $(warthog) ###"
 	@$(shell mkdir -p $(@D))
@@ -24,8 +26,14 @@ $(extra): $(EXTRA_OBJ)
 	@$(shell mkdir -p $(@D))
 	@ar -crs $@ $(EXTRA_OBJ)
 
+$(tch): $(TCH_OBJ)
+	@echo "###  Archiving object files: $(tch) ###"
+	@$(shell mkdir -p $(@D))
+	@ar -crs $@ $(TCH_OBJ)
+
 -include $(WARTHOG_OBJ:.o=.d)
 -include $(EXTRA_OBJ:.o=.d)
+-include $(TCH_OBJ:.o=.d)
 
 # Warthog objects as single targets
 obj/%.o: ../../%.cpp
@@ -37,6 +45,11 @@ bin/%: ../../programs/%.cpp $(warthog) $(extra) $(EXTRA_OBJ)
 	@echo "linking..."
 	@$(shell mkdir -p $(@D))
 	$(CXX) $< -o $@ -lwarthog -lwarthog-extra $(CFLAGS) $(D_LIBS) $(D_INCLUDES)
+
+tch/%: ../../tch_programs/%.cpp $(tch) $(TCH_OBJ)
+	@echo "linking..."
+	@$(shell mkdir -p $(@D))
+	$(CXX) $< -o $@ -ltch $(CFLAGS) $(D_LIBS) $(D_TCH_INCLUDES)
 
 test/%: ../../test/%.cpp $(warthog) $(extra) $(EXTRA_OBJ)
 	@echo "linking..."
