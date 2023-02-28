@@ -16,6 +16,9 @@
 #include "oracle_listener.h"
 #include "log.h"
 #include "xy_graph.h"
+#include "dist_controller.h"
+
+distribute::DistributeController dc;
 
 std::vector<warthog::sn_id_t>
 modulo(size_t num, size_t mod, size_t node_count)
@@ -448,6 +451,9 @@ main(int argc, char *argv[])
         }
     }
 
+    // assume max worker is 5
+    const int maxworker = 5;
+    dc = distribute::DistributeController(g.get_num_nodes(), maxworker, num);
     conf_filenme = cpd_filename + "_conf.csv";
     write_conf(conf_filenme, xy_filename, div, mod, num, from, to);
 

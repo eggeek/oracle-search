@@ -12,7 +12,7 @@ extras: bin/ch bin/fifo bin/make_cpd
 
 convert: bin/dimacs2xy bin/dimacs2metis bin/grid2graph
 
-test: bin/tests test/cpd_search
+test: bin/tests test/cpd_search test/distribute_controller
 
 tch: tch/split_data
 
