@@ -99,6 +99,20 @@ public:
   DistributeController() {};
   DistributeController(int _n, int maxw, int _wid): n(_n), maxworker(maxw), wid(_wid) { };
 
+  inline void set_method(string type, int key) {
+    if (type == "mod") {
+      method = MOD;
+    }
+    else if (type == "div") {
+      method = DIV;
+    }
+    else {
+      cerr << "method not exists" << endl;
+      exit(1);
+    }
+    set_method(method, key);
+  }
+
   inline void set_method(DistributeMethod method, int key) {
     this->method = method;
     this->distkey = key;
@@ -168,8 +182,11 @@ public:
     int from = maxBperW * worker;
     int to = min(from + maxBperW, maxblock);
     res.clear();
+    // cout << "worker: " << worker << endl;
     for (int i=from; i<to; i++) {
       res.push_back(get_block(i));
+      // cout << "block " << i
+      //      << " [ " << *(res.back().begin()) << ", " << res.back().back() << "]" << endl;
       for (auto& id: res.back()) {
         int idinblock = get_index_in_block(id);
         node2block[id] = {i, idinblock};

@@ -8,7 +8,7 @@ clean:
 
 main: bin/warthog bin/roadhog bin/mapf
 
-extras: bin/ch bin/fifo bin/make_cpd
+extras: bin/ch bin/fifo bin/make_cpd bin/make_cpd_auto
 
 convert: bin/dimacs2xy bin/dimacs2metis bin/grid2graph
 
