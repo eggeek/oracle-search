@@ -1,5 +1,5 @@
 /**
- * This file is used to create CPDs by auto partitioning:
+ * This file is to create CPDs by auto partitioning:
  * 0. assuming cpd type is reverse table (other types are not currently supported)
  * 1. make one or more cpds files on a single worker
  * 2. write config file for each cpd file
@@ -163,10 +163,11 @@ main(int argc, char *argv[])
 {
     int verbose = 0;
     string outdir = "";
+    // default behaviour of partitioning is running everything on this worker
     string partition = "mod"; // default method id mod
     int partkey = 1;          // default behavior is not partition at all
-    int workerid = 0;         // default worker is 0 (local) 
-    int maxworker = 1;        // default maxworker is 1 (local)
+    int workerid = 0;         // default worker is 0 
+    int maxworker = 1;        // default maxworker is 1
     warthog::util::param valid_args[] =
     {
         // define the partition method
@@ -246,9 +247,6 @@ main(int argc, char *argv[])
 
     bool failed;
     for (auto& nodes: dc.get_worker_blocks()) {
-      // We have to explicitly create and pass the different (sub-) types of
-      // oracles and listeners or it messes with the template resolution.
-      std::vector<warthog::cpd::oracle_listener*> listeners(nthreads);
       int bid = dc.get_blockid(nodes.back());
       string cpd_filename = format_cpdfile(xy_filename, outdir, dc.wid, bid);
       // remove ".cpd" suffix
@@ -258,6 +256,9 @@ main(int argc, char *argv[])
 
       warthog::cpd::graph_oracle_base<warthog::cpd::REV_TABLE> cpd(&g);
 
+      // We have to explicitly create and pass the different (sub-) types of
+      // oracles and listeners or it messes with the template resolution.
+      std::vector<warthog::cpd::oracle_listener*> listeners(nthreads);
       for (size_t t = 0; t < nthreads; t++)
       {
           listeners.at(t) = new warthog::cpd::reverse_oracle_listener<
