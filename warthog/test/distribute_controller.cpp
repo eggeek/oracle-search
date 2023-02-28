@@ -1,13 +1,13 @@
 #define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
-#include "dist_controller.h"
+#include "distribution_controller.h"
 
 using namespace std;
 using namespace distribute;
 
 TEST_CASE("div") {
   int n = 167758;
-  int div = 8400;
+  int div = 9000;
   int maxw = 5;
   vector<DistributeController> ds;
   for (int i=0; i<maxw; i++) {
