@@ -187,7 +187,6 @@ main(int argc, char *argv[])
     warthog::util::cfg cfg;
     cfg.parse_args(argc, argv, valid_args);
 
-    std::string type = cfg.get_param_value("type");
     bool reverse = true;
 
     std::string xy_filename = cfg.get_param_value("input");
