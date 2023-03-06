@@ -53,17 +53,17 @@ void create_distribute_controller(int nodenum) {
   int partkey, wid, maxworker;
   if (cfg.get_num_values("partmethod") > 0 &&
       cfg.get_num_values("partkey") > 0 &&
-      cfg.get_num_values("wid") > 0 && 
+      cfg.get_num_values("workerid") > 0 && 
       cfg.get_num_values("maxworker")) {
     partmethod = cfg.get_param_value("partmethod");
     partkey = stoi(cfg.get_param_value("partkey"));
-    wid = stoi(cfg.get_param_value("wid"));
+    wid = stoi(cfg.get_param_value("workerid"));
     maxworker = stoi(cfg.get_param_value("maxworker"));
     dc = distribute::DistributeController(nodenum, maxworker, wid);
     dc.set_method(partmethod, partkey);
   } 
   else {
-    std::cerr << "Required argument --partmethod, --partkey, --wid, --maxworker" << std::endl;
+    std::cerr << "Required argument --partmethod, --partkey, --workerid, --maxworker" << std::endl;
     exit(EXIT_FAILURE);
   }
   
@@ -128,6 +128,19 @@ read_oracle(std::string cpdfile, warthog::cpd::graph_oracle_base<S>& oracle)
         std::cerr << "Could not find the CPD file." << std::endl;
         return;
     }
+}
+
+
+template<warthog::cpd::symbol S>
+void
+conf_oracle(warthog::cpd::graph_oracle_base<S>& oracle)
+{
+  if (dc.method == distribute::DIV) {
+    oracle.set_mod(dc.distkey);
+  }
+  else if (dc.method == distribute::MOD) {
+    oracle.set_div(dc.distkey);
+  }
 }
 
 /**
@@ -413,6 +426,7 @@ run_table_search(warthog::graph::xy_graph &g)
 
     warthog::cpd::graph_oracle_base<warthog::cpd::REV_TABLE> oracle(&g);
     read_oracle<warthog::cpd::REV_TABLE>(cpdfile, oracle);
+    conf_oracle<warthog::cpd::REV_TABLE>(oracle);
 
     for (auto& alg: algos)
     {
@@ -479,6 +493,7 @@ run_table(warthog::graph::xy_graph &g)
 
     warthog::cpd::graph_oracle_base<warthog::cpd::REV_TABLE> oracle(&g);
     read_oracle<warthog::cpd::REV_TABLE>(cpdfile, oracle);
+    conf_oracle<warthog::cpd::REV_TABLE>(oracle);
 
     for (auto& alg: algos)
     {
@@ -513,7 +528,7 @@ main(int argc, char *argv[])
             {"fifo",  required_argument, 0, 1},
             {"partmethod",  required_argument, 0, 1},
             {"partkey",  required_argument, 0, 1},
-            {"wid",  required_argument, 0, 1},
+            {"workerid",  required_argument, 0, 1},
             {"outdir",  required_argument, 0, 1},
             {"maxworker",  required_argument, 0, 1},
             {"alg",   required_argument, 0, 1},
