@@ -194,6 +194,9 @@ public:
     int from = maxBperW * worker;
     int to = min(from + maxBperW, maxblock);
     res.clear();
+    // more workers than blocks, some workers are empty
+    if (to <= from) 
+      return res;
     blockids.resize(to - from);
     // cout << "worker: " << worker << endl;
     for (int i=from; i<to; i++) {
