@@ -5,8 +5,21 @@
  * 2. write config file for each cpd file
  * 3. cpd filenames are auto generated, if user wants to specify filename, using `make_cpd` instead
  * 4. cpd filename format is <map>-<wid>-<bid>.cpd 
+ * 5. at the current stage, we assume each worker has only 1 block
  *  
- * Example:
+ * Example 1 (single block per worker):
+ * - Map file: melb-both.xy, the graph has 167760 nodes
+ * - We have 5 workers, and distribute by method `{mod, 5}` (see definition in distribution_controller.h)
+ * - Then, there will be 5 blocks , 1 per worker (ids: 0, 1, 2, 3, 4)
+ *   - 0: [0]
+ *   - 1: [1]
+ *   - 2: [2]
+ *   - 3: [3]
+ *   - 4: [4]
+ * - On worker=1, we will create 1 cpd files and the corresponding config
+ *   - melb-both-1-0.cpd, melb-both-1-0.conf
+ *
+ * Example 2 (multiple blocks per worker):
  *  - Map file: melb-both.xy, the graph has 167760 nodes
  *  - We have 5 workers, and distribute by method `{div, 9000}` (see definition in distribution_controller.h).
  *  - Then there will be 19 blocks, each with size 9000, except the last one, and id of them are 0, 1, ... 18.
@@ -17,9 +30,9 @@
  *    - 3:[12, 13, 14, 15], 
  *    - 4:[16, 17, 18]
  *  - On worker=4, we will create 3 cpd files and the corresponding config
- *    - melb-both-4-16.cpd, melb-both-4-16.config
- *    - melb-both-4-17.cpd, melb-both-4-17.config
- *    - melb-both-4-18.cpd, melb-both-4-18.config
+ *    - melb-both-4-16.cpd, melb-both-4-16.conf
+ *    - melb-both-4-17.cpd, melb-both-4-17.conf
+ *    - melb-both-4-18.cpd, melb-both-4-18.conf
  *  - In each config, we describe the graph filename, the distribution method ("{div, 9000}"), 
  *    the cpd method ("reverse table"), and the worker id, see details in function "write_conf".
  *
@@ -149,15 +162,6 @@ void write_conf(
         << wid << "," << bid << "," << "reverse-table" << std::endl;
 }
 
-string format_cpdfile(string graphfile, string outdir, int wid, int bid) {
-  // remove ".xy"
-  string res = graphfile.substr(0, graphfile.find_last_of("."));
-  if (!outdir.empty()) {
-    res = outdir + "/" + res.substr(res.find_last_of("\\/"));
-  }
-  return res + "-" + to_string(wid) + "-" + to_string(bid) + ".cpd";
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -247,7 +251,7 @@ main(int argc, char *argv[])
     bool failed;
     for (auto& nodes: dc.get_worker_blocks()) {
       int bid = dc.get_blockid(nodes.back());
-      string cpd_filename = format_cpdfile(xy_filename, outdir, dc.wid, bid);
+      string cpd_filename = distribute::format_cpdfile(xy_filename, outdir, dc.wid, bid);
       // remove ".cpd" suffix
       string config = cpd_filename.substr(0, cpd_filename.find_last_of(".")) + ".conf";
 

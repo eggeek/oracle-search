@@ -6,6 +6,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <tuple>
 #include "constants.h"
 
 namespace distribute {
@@ -84,6 +85,15 @@ int get_mod_idx(int n, int mod, int bid, int nodeid) {
   return nodeid / mod;
 }
 
+inline string format_cpdfile(string graphfile, string outdir, int wid, int bid) {
+  // remove ".xy"
+  string res = graphfile.substr(0, graphfile.find_last_of("."));
+  if (!outdir.empty()) {
+    res = outdir + "/" + res.substr(res.find_last_of("\\/"));
+  }
+  return res + "-" + to_string(wid) + "-" + to_string(bid) + ".cpd";
+}
+
 class DistributeController {
 
 public:
@@ -93,8 +103,9 @@ public:
       wid,      // woker's id
       maxblock; // max number of blocks, is computed by <method, distkey, n>
   DistributeMethod method;
-  map<int, pair<int, int>> node2block; // nodeid -> {blockid, index in block}
+  vector<tuple<int, int, int>> node2block; // nodeid -> {blockid, index in block}
   vector<vector<sn_id_t>> blocks;      //  node ids of each block
+  vector<int> blockids;                // blocks in this worker
 
   DistributeController() {};
   DistributeController(int _n, int maxw, int _wid): n(_n), maxworker(maxw), wid(_wid) { };
@@ -133,6 +144,7 @@ public:
   }
 
   inline void init() {
+    node2block.resize(n);
     blocks = get_worker_blocks(wid);
   }
 
@@ -182,23 +194,25 @@ public:
     int from = maxBperW * worker;
     int to = min(from + maxBperW, maxblock);
     res.clear();
+    blockids.resize(to - from);
     // cout << "worker: " << worker << endl;
     for (int i=from; i<to; i++) {
+      blockids[i-from] = i;
       res.push_back(get_block(i));
       // cout << "block " << i
       //      << " [ " << *(res.back().begin()) << ", " << res.back().back() << "]" << endl;
       for (auto& id: res.back()) {
         int idinblock = get_index_in_block(id);
-        node2block[id] = {i, idinblock};
+        node2block[id] = {i, idinblock, i-from};
       }
     }
     return res;
   }
 
   // which block has nodeid
-  inline int get_blockid(int nodeid) {
-    return node2block[nodeid].first;
-  }
+  inline int get_blockid(int nodeid) { return get<0>(node2block[nodeid]); }
+  // the block index in this worker that contains the node
+  inline int get_blockindex(int nodeid) { return get<2>(node2block[nodeid]); }
 
   // get blocks of this worker (by this->wid)
   inline vector<vector<sn_id_t>>& get_worker_blocks() {

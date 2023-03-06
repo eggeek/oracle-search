@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     vector<vector<sn_id_t>> blocks = dc.get_worker_blocks(i);
     for (auto& block: blocks) {
       for (auto& node: block) {
-        int wid = i, bid = dc.node2block[node].first, bindex = dc.node2block[node].second;
+        int wid = i, bid = get<0>(dc.node2block[node]), bindex = get<1>(dc.node2block[node]);
         cout << node << "," << wid << "," << bid << "," << bindex << endl;
       }
     }
