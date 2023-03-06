@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
   warthog::util::param valid_args[] =
   {
       // define the partition method
-      {"partition", required_argument, 0, 1},
+      {"partmethod", required_argument, 0, 1},
       // parameter of the partition method
       {"partkey", required_argument, 0, 1},
       // the id of this worker
@@ -33,8 +33,8 @@ int main(int argc, char* argv[]) {
   // parse distribution method
   if (cfg.get_num_values("maxworker") > 0)
     maxworker = stoi(cfg.get_param_value("maxworker"));
-  if (cfg.get_num_values("partition") > 0)
-    partition = cfg.get_param_value("partition");
+  if (cfg.get_num_values("partmethod") > 0)
+    partition = cfg.get_param_value("partmethod");
   if (cfg.get_num_values("partkey") > 0)
     partkey = stoi(cfg.get_param_value("partkey"));
 
