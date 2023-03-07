@@ -30,6 +30,8 @@ typedef warthog::cpd::graph_oracle_base<warthog::cpd::REV_TABLE> revtable;
 
 // Defaults
 std::string fifo = "/tmp/warthog.fifo";
+std::string partmethod;
+int partkey, wid, maxworker;
 std::vector<warthog::search*> algos;
 warthog::util::cfg cfg;
 
@@ -49,24 +51,8 @@ signalHandler(int signum)
 }
 
 void create_distribute_controller(int nodenum) {
-  std::string partmethod;
-  int partkey, wid, maxworker;
-  if (cfg.get_num_values("partmethod") > 0 &&
-      cfg.get_num_values("partkey") > 0 &&
-      cfg.get_num_values("workerid") > 0 && 
-      cfg.get_num_values("maxworker")) {
-    partmethod = cfg.get_param_value("partmethod");
-    partkey = stoi(cfg.get_param_value("partkey"));
-    wid = stoi(cfg.get_param_value("workerid"));
-    maxworker = stoi(cfg.get_param_value("maxworker"));
-    dc = distribute::DistributeController(nodenum, maxworker, wid);
-    dc.set_method(partmethod, partkey);
-  } 
-  else {
-    std::cerr << "Required argument --partmethod, --partkey, --workerid, --maxworker" << std::endl;
-    exit(EXIT_FAILURE);
-  }
-  
+  dc = distribute::DistributeController(nodenum, maxworker, wid);
+  dc.set_method(partmethod, partkey);
 }
 
 std::string
@@ -554,6 +540,19 @@ main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+  if (cfg.get_num_values("partmethod") > 0 &&
+      cfg.get_num_values("partkey") > 0 &&
+      cfg.get_num_values("workerid") > 0 && 
+      cfg.get_num_values("maxworker")) {
+    partmethod = cfg.get_param_value("partmethod");
+    partkey = stoi(cfg.get_param_value("partkey"));
+    wid = stoi(cfg.get_param_value("workerid"));
+    maxworker = stoi(cfg.get_param_value("maxworker"));
+  } else {
+    std::cerr << "Required argument --partmethod, --partkey, --workerid, --maxworker" << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
 #ifdef SINGLE_THREADED
     algos.resize(1);
 #else
@@ -561,10 +560,10 @@ main(int argc, char *argv[])
 #endif
 
     std::string other = cfg.get_param_value("fifo");
-    if (other != "")
-    {
+    if (other != "") {
         fifo = other;
     }
+    else fifo = "/tmp/worker" + std::to_string(wid) + ".fifo";
 
     int status = mkfifo(fifo.c_str(), S_IFIFO | 0666);
 
